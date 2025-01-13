@@ -23,7 +23,7 @@ pipeline {
             // use pipeline syntax generator to generate below step
             // 'Pipeline syntax' --> Steps 'Smaple step' --> git (enter url & branch & generate)
             steps {
-                dir ("DevopsProject1"){
+                dir ("Devops_miniproject"){
                   script {
                     git branch: 'main', url: 'https://github.com/saida344/Devops_miniproject.git' 
                   }
@@ -34,7 +34,7 @@ pipeline {
         stage("3. Maven Unit Test") {  
             // Test the individual units of code 
             steps{
-                dir ("DevopsProject1"){
+                dir ("Devops_miniproject"){
                   sh 'mvn test'        
                 }
             }
@@ -43,7 +43,7 @@ pipeline {
         stage('4. Maven Build') {
             // Build the application into an executable file (.jar)
             steps{
-                dir ("DevopsProject1"){
+                dir ("Devops_miniproject"){
                   sh 'mvn clean install'   
                 }
             }
@@ -52,7 +52,7 @@ pipeline {
         stage("5. Maven Integration Test") {
             //  Test the interaction between different units of code
             steps{
-                dir ("DevopsProject1"){
+                dir ("Devops_miniproject"){
                   sh 'mvn verify'          
                 }
             }
