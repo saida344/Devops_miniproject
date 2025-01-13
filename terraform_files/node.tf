@@ -2,7 +2,7 @@
 # STEP1: CREATING A SECURITY GROUP FOR DOCKER-K8S
 # Description: K8s requires ports 22, 80, 443, 6443, 8001, 10250, 30000-32767
 resource "aws_security_group" "my_security_group2" {
-  name        = "my-security-group4"
+  name        = "my-security-group2S"
   description = "Allow K8s ports"
 
   # SSH Inbound Rules
@@ -75,10 +75,10 @@ resource "aws_security_group" "my_security_group2" {
 # Note: i. First create a pem-key manually from the AWS console
 #      ii. Copy it in the same directory as your terraform code
 resource "aws_instance" "my_ec2_instance2" {
-  ami                    = "ami-0cf10cdf9fcd62d37"
+  ami                    = "ami-05576a079321f21f8"
   instance_type          = "t2.medium" # K8s requires min 2CPU & 4G RAM
   vpc_security_group_ids = [aws_security_group.my_security_group2.id]
-  key_name               = "My_Key" # paste your key-name here, do not use extension '.pem'
+  key_name               = "aws-key" # paste your key-name here, do not use extension '.pem'
 
   # Consider EBS volume 30GB
   root_block_device {
@@ -90,52 +90,51 @@ resource "aws_instance" "my_ec2_instance2" {
     Name = "NODE-SERVER"
   }
 
-  # STEP3: USING REMOTE-EXEC PROVISIONER TO INSTALL TOOLS
-  provisioner "remote-exec" {
-    # ESTABLISHING SSH CONNECTION WITH EC2
-    connection {
-      type        = "ssh"
-      private_key = file("./My_Key.pem") # replace with your key-name 
-      user        = "ec2-user"
-      host        = self.public_ip
-    }
+  #   # STEP3: USING REMOTE-EXEC PROVISIONER TO INSTALL TOOLS
+  #   provisioner "remote-exec" {
+  #     # ESTABLISHING SSH CONNECTION WITH EC2
+  #     connection {
+  #       type        = "ssh"
+  #       private_key = file("./aws-key.pem") # replace with your key-name 
+  #       user        = "ec2-user"
+  #       host        = self.public_ip
+  #     }
 
-      inline = [
-      "sleep 200",
+  #       inline = [
+  #       "sleep 200",
 
-      # Install Docker
-      # REF: https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
-      "sudo yum update -y",
-      "sudo yum install docker -y",
-      "sudo systemctl start docker",
-      "sudo systemctl enable docker",
-      "sudo chmod 777 /var/run/docker.sock",
-      
-      # Install K8s
-      # REF: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
-      "sudo setenforce 0",
-      "sudo sed -i 's/^SELINUX=enforcing$$/SELINUX=permissive/' /etc/selinux/config",
-      "cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo",
-      "[kubernetes]",
-      "name=Kubernetes",
-      "baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/",
-      "enabled=1",
-      "gpgcheck=1",
-      "gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key",
-      "exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni",
-      "EOF",
-      "sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes",
-      "sudo systemctl enable --now kubelet",
-      "sudo kubeadm init --pod-network-cidr=10.244.0.0/16  --ignore-preflight-errors=NumCPU --ignore-preflight-errors=Mem",
-      "sudo mkdir -p $HOME/.kube",
-      "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config",
-      "sudo chown $(id -u):$(id -g) $HOME/.kube/config",
-      "kubectl apply -f https://docs.projectcalico.org/v3.18/manifests/calico.yaml",
-      "kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/tigera-operator.yaml",
-      "kubectl taint nodes --all node-role.kubernetes.io/control-plane-",
-      ]
-    }
-  
+  #       # Install Docker
+  #       # REF: https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
+  #       "sudo yum update -y",
+  #       "sudo yum install docker -y",
+  #       "sudo systemctl start docker",
+  #       "sudo systemctl enable docker",
+  #       "sudo chmod 777 /var/run/docker.sock",
+
+  #       # Install K8s
+  #       # REF: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+  #       "sudo setenforce 0",
+  #       "sudo sed -i 's/^SELINUX=enforcing$$/SELINUX=permissive/' /etc/selinux/config",
+  #       "cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo",
+  #       "[kubernetes]",
+  #       "name=Kubernetes",
+  #       "baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/",
+  #       "enabled=1",
+  #       "gpgcheck=1",
+  #       "gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key",
+  #       "exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni",
+  #       "EOF",
+  #       "sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes",
+  #       "sudo systemctl enable --now kubelet",
+  #       "sudo kubeadm init --pod-network-cidr=10.244.0.0/16  --ignore-preflight-errors=NumCPU --ignore-preflight-errors=Mem",
+  #       "sudo mkdir -p $HOME/.kube",
+  #       "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config",
+  #       "sudo chown $(id -u):$(id -g) $HOME/.kube/config",
+  #       "kubectl apply -f https://docs.projectcalico.org/v3.18/manifests/calico.yaml",
+  #       "kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/tigera-operator.yaml",
+  #       "kubectl taint nodes --all node-role.kubernetes.io/control-plane-",
+  #       ]
+  #      }  
 }
 
 # STEP3: OUTPUT PUBLIC IP OF EC2 INSTANCE
